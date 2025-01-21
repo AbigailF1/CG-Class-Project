@@ -1,12 +1,16 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;700&display=swap");
 :root {
-  --banner: white;
-  --side: #f7f9fc;
-  --middle: #ffffff;
-  --primary-color: #005f73;
-  --accent-color: #c18da3;
-  --text-color: #1e1e1e;
-  --text-secondary: #4f1717;
+  --banner: #ffffff;
+  --side: #f3f4f6;
+  --middle: #fdd7e4; /* Baby pink for the middle section */
+  --canvas-bg: #f8d4e0; /* Light pink for canvas */
+  --primary: #4c2a8e; /* Deep purple */
+  --secondary: #d31cc7; /* Pink */
+  --accent: #ff9ac4; /* Soft pink */
+  --text-dark: #333333;
+  --text-light: #f5f5f5;
+  --text-white: #ffffff; /* For white text */
+  --button-hover: #ec6bc1; /* Hover pink for buttons */
 }
 
 * {
@@ -56,9 +60,7 @@ body {
 
 .download {
   width: 17%;
-  background: var(--primary-color);
-  color: #ffffff;
-
+  background: linear-gradient(25deg, var(--secondary), #9fb1d3);
   outline: none;
   border-radius: 5px;
   height: 60%;
@@ -71,11 +73,7 @@ body {
 }
 
 .download:hover {
-  background: var(--accent-color);
-}
-.Download {
-  padding-right: 10px;
-  justify-content: space-evenly;
+  background: linear-gradient(25deg, #9fb1d3, var(--secondary));
 }
 
 .save-now {
@@ -84,9 +82,9 @@ body {
 }
 
 #left {
-  background-color: var(--side);
-  border: 1px solid #e0e0e0;
   grid-area: left;
+  background-color: #ffffff;
+  border: 1px solid #e5e5e5;
   padding: 5%;
   display: flex;
   flex-direction: column;
@@ -99,66 +97,25 @@ body {
   height: 50%;
   justify-content: space-between;
 }
+
 #tools p {
-  color: #080420;
+  color: var(--text-dark);
   font-size: 15px;
   font-weight: bold;
   width: 100%;
   padding-bottom: 0.5rem;
 }
-#exposure {
-  margin-top: 5px;
-  background-color: #fbfbfb;
-}
-.exposure-box {
-  margin: 2%;
-}
-#saturate-slider {
-  background-color: #fcffff;
-  margin: 2%;
-}
 
-#hue-slider {
-  background-color: #ffffff;
-  margin: 2%;
-}
-#blur-slider {
-  background-color: #fbffff;
-  margin: 2%;
-}
-#opacity-slider {
-  background-color: #ffffff;
-  margin: 2%;
-}
-#resize-button {
-  margin: 2%;
-}
 #left > #tools > #tool > .action-tool {
   justify-content: center;
   height: 50px;
   width: 130px;
   margin: 5px 2px 5px 2px;
-  color: black;
-  background: #a8a0ca;
+  color: white;
+  background: var(--primary);
   outline: none;
   border: none;
   border-radius: 10px;
-  border: #060011;
-}
-#right > #tools > h4 {
-  margin-bottom: 10px;
-}
-#right > #tools > .action-tool {
-  margin-bottom: 5px;
-  color: rgb(0, 0, 0);
-  background: #a8a0ca;
-  height: 45px;
-  padding: 0 5%;
-  width: auto;
-  outline: none;
-  border: none;
-  border-radius: 7px;
-  border: #060011;
 }
 
 #left > #tools > #tool > .action-tool:hover {
@@ -166,6 +123,33 @@ body {
   color: white;
   box-shadow: 0px 5px 5px 0px #060011;
 }
+
+#right {
+  grid-area: right;
+  background-color: #ffffff; /* Same as left */
+  padding: 5%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: var(--text-dark); /* Text color adjusted for readability */
+}
+
+#right > #tools > h4 {
+  margin-bottom: 10px;
+}
+
+#right > #tools > .action-tool {
+  margin-bottom: 5px;
+  color: rgb(255, 255, 255);
+  background: var(--primary); /* Purple background for buttons */
+  height: 45px;
+  padding: 0 5%;
+  width: auto;
+  outline: none;
+  border: none;
+  border-radius: 7px;
+}
+
 #right > #tools > .action-tool:hover {
   background: #3e6581;
   height: 55px;
@@ -178,16 +162,13 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  /* color: black; */
 }
 
 .upload-img {
-  background: var(--accent-color);
-  color: white;
-
   padding: 4% 4%;
   outline: none;
   border-radius: 30px;
+  background: var(--secondary);
   width: 150px;
   height: 60px;
   margin-bottom: 10px;
@@ -197,13 +178,8 @@ body {
   text-decoration: none;
 }
 
-.upload-img i {
-  justify-content: center;
-}
-
 .upload-img:hover {
-  background: #631841;
-  color: white;
+  background-color: var(--accent);
 }
 
 .input {
@@ -218,13 +194,10 @@ body {
   width: 2.5rem;
   height: 1.5rem;
 }
-.dropup-content,
-.resize {
-  width: 100%;
-}
 
 .dimensions {
   display: flex;
+  margin-bottom: 30px;
 }
 
 .aspect label {
@@ -241,55 +214,52 @@ body {
 
 #middle {
   grid-area: middle;
-  /* background-color: var(--middle); */
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
   align-items: center;
-  background: linear-gradient(#de97de, #cbb1c0f5);
+  background-color: var(--middle); /* Baby pink background */
 }
 
 .canvas {
   width: 50%;
   text-align: center;
 }
+
 .canvas > .uploaded-img-container {
   text-align: center;
-  background: linear-gradient(#ce6adb, #d1bdcff5);
+  background: var(--canvas-bg); /* Light pink for canvas */
   border: 1px solid #8870b82c;
   box-shadow: 0px 10px 15px 0px #000002;
   width: 100%;
-
+  height: 400px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   overflow: hidden;
 }
+
 .canvas > .uploaded-img-container > .fa-cloud-upload-alt {
   font-size: 100px;
   color: #9c2c96b4;
   padding: 10px;
 }
-.uploaded-img-container {
-  height: 300px;
-  /*width: 300px;*/
-  transition: transform 0.8s ease-in-out;
-}
+
 .uploaded-img-container:hover {
-  transform: rotate(360);
+  transform: rotate(360deg);
 }
+
 .canvas > .img-box {
-  width: 700px;
-  height: 400px;
-  padding: 0px;
+  width: 100%;
+  height: 100%;
   display: none;
   justify-content: center;
   align-items: center;
-  padding-right: 100px;
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
+  object-fit: contain; /* This should help the image fit properly */
 }
 
 #dos {
@@ -308,12 +278,12 @@ body {
   height: 150%;
   padding: 0px 10px 0px 1px;
   margin-bottom: 10px;
-  background: #a06b8c;
+  background: #6b8fa0;
   border-radius: 30px;
   border: none;
   color: white;
-  /* border: 1px solid #e5e5e5; */
 }
+
 .Clear {
   display: flex;
   align-items: center;
@@ -321,55 +291,44 @@ body {
   width: 12%;
   height: 150%;
   margin-bottom: 10px;
-  background: #a06b8c;
+  background: #6b8fa0;
   border-radius: 30px;
   border: none;
-  /* border: 1px solid #e5e5e5; */
+  text-decoration: none; /* Remove underline from the entire .Clear button */
 }
-#upload {
-  color: white;
-  text-underline-offset: unset;
-  text-decoration: none;
+
+.Clear a {
+  color: white; /* Make the link text white */
+  text-decoration: none; /* Remove underline from the link */
+}
+
+.Clear:hover {
+  background-color: #271863;
 }
 
 .undo:hover,
 .redo:hover,
 .Clear:hover {
-  background-color: #631841;
-  /* box-shadow: 0px 5px 5px 0px #000002; */
-  text-decoration: none;
-}
-
-#right {
-  background-color: var(--side);
-  border: 1px solid #e0e0e0;
-  grid-area: right;
-  padding: 5%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  background-color: var(--accent);
 }
 
 @media only screen and (max-width: 800px) {
   body {
     height: auto;
-
     grid-template-columns: auto;
     grid-template-rows: 10% 50% 35% 25%;
     grid-template-areas:
       "banner "
-      " middle "
+      "middle "
       "left"
       "right";
   }
 
-  #upload {
-    justify-content: center;
-  }
   .download {
     width: 45%;
   }
 }
+
 @media only screen and (max-width: 464px) {
   middle,
   left,

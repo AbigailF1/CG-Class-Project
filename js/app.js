@@ -14,6 +14,48 @@ const changeControl = {
     currentImage: null,
     nextImage: null,
 };
+
+let initialState;
+function captureInitialState() {
+    initialState = ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+
+window.onload = function() {
+    captureInitialState(); // Capture the initial empty canvas state when the page loads
+};
+
+
+// Function to clear the canvas (reset to the original state)
+function clearCanvas() {
+    saveState();
+    // Restore the canvas to the initial state
+    ctx.putImageData(initialState, 0, 0);
+
+    // Optionally reset file input in case you want to allow the user to upload again
+    document.getElementById('input-field').value = ""; // Reset file input to allow re-upload
+    updateButtonState(); // Update button states as needed
+}
+
+// Function to handle image loading
+function loadImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear previous content before drawing new image
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // Draw the uploaded image
+                saveState(); // Save the current state after the image is uploaded
+            }
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file); // Read the file as a data URL
+    }
+}
+
+// Function to capture the initial state of the canvas
+
 var flag=true;
 const themeSwitch = document.querySelector('input');
 
@@ -34,6 +76,80 @@ themeSwitch.addEventListener('change', () => {
 	isDark = !isDark;
   document.body.classList.toggle('dark-theme');
 });
+// Initialize stacks for undo and redo
+const history = {
+    undoStack: [],
+    redoStack: [],
+};
+
+// Save the current state of the canvas to the undo stack
+const saveState = () => {
+    const state = {
+        imageData: ctx.getImageData(0, 0, canvas.width, canvas.height),
+        width: canvas.width,
+        height: canvas.height,
+    };
+    history.undoStack.push(state);
+    history.redoStack = []; // Clear the redo stack
+    updateButtonState();
+};
+
+// Update the state of undo/redo buttons
+const updateButtonState = () => {
+    undoBtn.classList.toggle("disabled", history.undoStack.length === 0);
+    redoBtn.classList.toggle("disabled", history.redoStack.length === 0);
+};
+
+// Undo the last action
+const unDo = () => {
+    if (history.undoStack.length > 0) {
+        const currentState = {
+            imageData: ctx.getImageData(0, 0, canvas.width, canvas.height),
+            width: canvas.width,
+            height: canvas.height,
+        };
+        history.redoStack.push(currentState);
+
+        const previousState = history.undoStack.pop();
+        canvas.width = previousState.width;
+        canvas.height = previousState.height;
+        ctx.putImageData(previousState.imageData, 0, 0);
+    }
+    updateButtonState();
+};
+
+
+// Redo the last undone action
+const reDo = () => {
+    if (history.redoStack.length > 0) {
+        const currentState = {
+            imageData: ctx.getImageData(0, 0, canvas.width, canvas.height),
+            width: canvas.width,
+            height: canvas.height,
+        };
+        history.undoStack.push(currentState);
+
+        const nextState = history.redoStack.pop();
+        canvas.width = nextState.width;
+        canvas.height = nextState.height;
+        ctx.putImageData(nextState.imageData, 0, 0);
+    }
+    updateButtonState();
+};
+
+
+
+
+// Attach event listeners
+undoBtn.addEventListener("click", unDo);
+redoBtn.addEventListener("click", reDo);
+saveBtn.addEventListener("click", () => saveState()); // Save the state manually when needed
+uploadBtn.addEventListener("click", () => {
+    clearCanvas();
+    // other file upload logic
+});
+
+
 
 // Rotate image on cick 
 const Root = document.documentElement
@@ -52,83 +168,85 @@ function rotate() {
     //Root.style.setProperty('--turn', RotateDeg + "deg")
 }
 
-// Undo last action
-function unDo(){
-    if(changeControl.prevImage){
-        if(document.getElementById("img-box").style.display=='none'){
-            document.getElementById("img-box").style.display='block';
-            document.querySelector("div.uploaded-img-container").style.display = "none";
-        }
-        undoBtn.classList.add("disabled");
-        redoBtn.classList.remove("disabled");
-        ctx.putImageData(changeControl.prevImage, 0, 0);
-        changeControl.nextImage = changeControl.currentImage;
-        changeControl.currentImage = changeControl.prevImage;
-        changeControl.prevImage = null;
-    }
-}
 
-// Draw a rectangle to crop with mousemove
+
+// Draw a rectangle to indicate the cropping area during mousemove
 const doCrop = (initialCoords, imageData, event) => {
-   ctx.putImageData(imageData, 0, 0);
-   const rect = canvas.getBoundingClientRect();
-   const coords = {
-      x: ((event.clientX - rect.left) / (rect.right - rect.left)) * canvas.width,
-      y: ((event.clientY - rect.top) / (rect.bottom - rect.top)) * canvas.height,
-   };
-   ctx.strokeRect(initialCoords.x, initialCoords.y, coords.x, coords.y);
+    ctx.putImageData(imageData, 0, 0);
+    const rect = canvas.getBoundingClientRect();
+    const coords = {
+        x: ((event.clientX - rect.left) / (rect.right - rect.left)) * canvas.width,
+        y: ((event.clientY - rect.top) / (rect.bottom - rect.top)) * canvas.height,
+    };
+    const width = coords.x - initialCoords.x;
+    const height = coords.y - initialCoords.y;
+ 
+    // Draw a transparent rectangle to show the cropping area
+    ctx.beginPath();
+    ctx.rect(initialCoords.x, initialCoords.y, width, height);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "red"; // Highlight the cropping area
+    ctx.stroke();
 };
-
-// Crop and set the new image with mouseup
+ 
+// Crop and set the new image on mouseup
 const endCrop = (initialCoords, event) => {
-    //after crop is done revert back to original cursor
-    document.body.style.cursor = "default";
-   const rect = canvas.getBoundingClientRect();
-   const coords = {
-      x: ((event.clientX - rect.left) / (rect.right - rect.left)) * canvas.width,
-      y: ((event.clientY - rect.top) / (rect.bottom - rect.top)) * canvas.height,
-   };
+    document.body.style.cursor = "default"; // Reset cursor
+    canvas.removeEventListener("mousemove", doCrop); // Remove event listener
+    canvas.removeEventListener("mouseup", endCrop);
 
-   // getting the image in the area of the reactangle
-   const croppedImage = ctx.getImageData(
-      initialCoords.x + 1,
-      initialCoords.y + 1,
-      Math.abs(initialCoords.x - coords.x),
-      Math.abs(initialCoords.y - coords.y)
-   );
+    const rect = canvas.getBoundingClientRect();
+    const finalCoords = {
+        x: ((event.clientX - rect.left) / (rect.right - rect.left)) * canvas.width,
+        y: ((event.clientY - rect.top) / (rect.bottom - rect.top)) * canvas.height,
+    };
 
-   // removing listerners
-   var old_element = canvas;
-   var new_element = old_element.cloneNode(true);
-   old_element.parentNode.replaceChild(new_element, old_element);
-   canvas = new_element;
-   ctx = canvas.getContext("2d");
+    // Calculate the cropped area's dimensions
+    const startX = Math.min(initialCoords.x, finalCoords.x);
+    const startY = Math.min(initialCoords.y, finalCoords.y);
+    const width = Math.abs(finalCoords.x - initialCoords.x);
+    const height = Math.abs(finalCoords.y - initialCoords.y);
 
-   // setting up the cropped image
-   // to the starting position of cropped image
-   ctx.putImageData(croppedImage, initialCoords.x, initialCoords.y);
+    // Get cropped image data
+    const croppedImage = ctx.getImageData(startX, startY, width, height);
+
+    // Update canvas dimensions to match cropped area
+    canvas.width = width;
+    canvas.height = height;
+
+    // Redraw the cropped image onto the canvas
+    ctx.putImageData(croppedImage, 0, 0);
+
+    // Update activeImage to reflect the cropped area
+    activeImage = new Image();
+    activeImage.src = canvas.toDataURL();
 };
 
-// Crop when mousedown
+// Initialize cropping on mousedown
 const startCrop = (imageData, event) => {
-    //set cursor to crosshair on crop start
-    document.body.style.cursor = "crosshair";
-    
-   const rect = canvas.getBoundingClientRect();
-   const initialCoords = {
-      x: ((event.clientX - rect.left) / (rect.right - rect.left)) * canvas.width,
-      y: ((event.clientY - rect.top) / (rect.bottom - rect.top)) * canvas.height,
-   };
-   canvas.addEventListener("mousemove", (event) => doCrop(initialCoords, imageData, event));
-   canvas.addEventListener("mouseup", (event) => endCrop(initialCoords, event));
+    document.body.style.cursor = "crosshair"; // Set cursor to crosshair
+    const rect = canvas.getBoundingClientRect();
+    const initialCoords = {
+        x: ((event.clientX - rect.left) / (rect.right - rect.left)) * canvas.width,
+        y: ((event.clientY - rect.top) / (rect.bottom - rect.top)) * canvas.height,
+    };
+
+    const mouseMoveHandler = (e) => doCrop(initialCoords, imageData, e);
+    const mouseUpHandler = (e) => endCrop(initialCoords, e);
+
+    canvas.addEventListener("mousemove", mouseMoveHandler);
+    canvas.addEventListener("mouseup", (e) => {
+        endCrop(initialCoords, e);
+        canvas.removeEventListener("mousemove", mouseMoveHandler); // Clean up event listeners
+        canvas.removeEventListener("mouseup", mouseUpHandler);
+    });
 };
 
-// Crop Image
+// Trigger crop functionality
 const cropImage = () => {
-   var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-   canvas.addEventListener("mousedown", (event) => startCrop(imageData, event));
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    canvas.addEventListener("mousedown", (event) => startCrop(imageData, event));
 };
-
 
 // Resizer scripting.....by Sayan Kumar
 let activeImage, originalWidthToHeightRatio;
@@ -208,17 +326,6 @@ const changeExposure = (event) => {
    ctx.putImageData(imageData, 0, 0);
 };
 
-// Redo last action
-function reDo(){
-    if(changeControl.nextImage){
-        redoBtn.classList.add("disabled");
-        undoBtn.classList.remove("disabled");
-        ctx.putImageData(changeControl.nextImage, 0, 0);
-        changeControl.prevImage = changeControl.currentImage;
-        changeControl.currentImage = changeControl.nextImage;
-        changeControl.nextImage = null;
-    }
-}
 
 // Remove image btn click
 function remove()
@@ -232,12 +339,12 @@ flag=true;
 }
 
 //Function to call specific filters and do change control, add new cases for new filters
-function applyFilter(filter){
+function applyFilter(filter) {
     redoBtn.classList.add("disabled");
     undoBtn.classList.remove("disabled");
     changeControl.nextImage = null;
     changeControl.prevImage = changeControl.currentImage;
-    switch(filter){
+    switch (filter) {
         case "grey":
             doGreyScale();
             break;
@@ -267,10 +374,12 @@ function applyFilter(filter){
             break;
         case "remove":
             remove();
-            
     }
+    // Save the current state after applying the filter
     changeControl.currentImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    saveState();
 }
+
 
 //global variable 
 var uploaded_img = "";
@@ -281,6 +390,7 @@ function uploadbtnActive(){
     fileBtn.click();
    
 }
+
 
 //Simple algorithm to convert image to GreyScale
 function doGreyScale(){
@@ -653,3 +763,5 @@ opacitySlider.addEventListener("input", function() {
     opacity = 100 - opacitySlider.value;
     updateFilter();
 });
+
+
